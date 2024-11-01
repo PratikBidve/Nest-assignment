@@ -1,25 +1,226 @@
-nest-crud-live/
-├── src/
-│   ├── auth/
-│   │   ├── auth.module.ts
-│   │   ├── auth.service.ts
-│   │   ├── jwt.strategy.ts
-│   │   ├── local.strategy.ts
-│   │   └── guards/
-│   │       └── roles.guard.ts
-│   ├── user/
-│   │   ├── user.controller.ts
-│   │   ├── user.service.ts
-│   │   ├── user.entity.ts
-│   │   ├── dto/
-│   │   │   ├── create-user.dto.ts
-│   │   │   └── update-user.dto.ts
-│   ├── app.module.ts
-│   ├── main.ts
-├── .env
-├── docker-compose.yml
-├── README.md
-└── tsconfig.json
+NestJS Authentication and CRUD API:
+This project is a RESTful API built with NestJS, TypeORM, and PostgreSQL. It provides user authentication with JWT, role-based authorization, and secure CRUD operations on a User resource. The API adheres to clean and modular architecture principles, facilitating code reusability and scalability.
+
+Table of Contents:
+1)Project Overview
+2)Tech Stack
+3)Setup Instructions
+4)Installation
+5)Running the Application
+6)Environment Variables
+7)API Documentation
+8)Auth Endpoints
+9)User CRUD Endpoints
+10)Project Structure
+
+Project Overview:
+The API’s main functionalities include:
+
+User Registration and Login: Users can register and log in using JWT-based authentication.
+Role-Based Authorization: Implemented roles (admin, user) to restrict access to specific routes based on user roles.
+User CRUD Operations: Users can perform CRUD operations on the User entity, with routes secured by authentication.
+Modular Architecture: Uses NestJS modules (AuthModule, UsersModule) for separation of concerns, making the API maintainable and scalable.
+Tech Stack:
+NestJS: A progressive Node.js framework for scalable server-side applications.
+TypeORM: An ORM that allows interaction with PostgreSQL for efficient database management.
+PostgreSQL: A robust and widely used relational database system.
+Passport: Middleware for implementing authentication and authorization strategies.
+Setup Instructions
+Installation
+Clone the repository:
+
+bash
+Copy code
+git clone https://github.com/PratikBidve/Nest-assignment.git
+cd Nest-assignment
+Install dependencies:
+Inside terminal:
+npm install
+
+We have the enviorment variables inside docker-compose.yaml:
+    environment:
+      - DB_TYPE=postgres
+      - PG_HOST=db
+      - PG_USER=postgres
+      - PG_PASSWORD=postgres
+      - PG_DB=postgres
+      - PG_PORT=5432
+      - JWT_SECRET=your_jwt_secret_key 
+
+Running the Application
+Run with Docker (Recommended)
+
+Start services using Docker Compose:
+
+docker compose up --build //for the first time 
+docker compose up //after first time 
+
+This will start the NestJS API, PostgreSQL, and PgAdmin for database management.
+
+Access the API at http://localhost:3000.
+
+
+# Database configuration
+DB_TYPE=postgres
+PG_HOST=db
+PG_PORT=5432
+PG_USER=postgres
+PG_PASSWORD=postgres
+PG_DB=postgres
+
+# JWT Secret Key
+JWT_SECRET=your_jwt_secret_key
+
+
+API Documentation:
+Auth Endpoints
+Register a New User
+URL: POST /auth/register
+
+Description: Registers a new user with a username, password, and optional role.
+
+Body:
+
+json:
+Copy code:
+{
+  "username": "newuser",
+  "password": "newpassword",
+  "role": "user"
+}
+Login:
+URL: POST /auth/login
+
+Description: Authenticates a user and provides a JWT access token.
+
+Body:
+
+json
+Copy code
+{
+  "username": "testuser",
+  "password": "testpassword"
+}
+Response:
+
+json
+Copy code
+{
+  "access_token": "your.jwt.token"
+}
+Get Profile
+URL: GET /auth/profile
+Description: Returns the logged-in user’s profile.
+Headers: Authorization: Bearer <access_token>
+User CRUD Endpoints
+These endpoints allow for creating, reading, updating, and deleting users. All endpoints are protected and require a valid JWT token.
+
+Create a New User
+URL: POST /users
+
+Description: Creates a new user.
+
+Headers: Authorization: Bearer <access_token>
+
+Body:
+
+json
+Copy code
+{
+  "username": "newuser",
+  "password": "newpassword",
+  "role": "user"
+}
+Get All Users
+
+URL: GET /users
+
+Description: Retrieves a list of all users.
+Headers: Authorization: Bearer <access_token>
+
+Get a User by ID
+URL: GET /users/:id
+Description: Retrieves a specific user by their ID.
+Headers: Authorization: Bearer <access_token>
+
+Update a User by ID
+URL: PUT /users/:id
+
+Description: Updates a user’s details.
+
+Headers: Authorization: Bearer <access_token>
+
+Body:
+
+json:
+Copy code
+{
+  "username": "updateduser",
+  "role": "admin"
+}
+
+
+Partial Update (PATCH) a User by ID
+URL: PATCH /users/:id
+
+Description: Updates specific fields of a user’s profile.
+
+Headers: Authorization: Bearer <access_token>
+
+Body:
+
+json:
+Copy code
+{
+  "username": "updatedPartialUser"
+}
+
+
+Delete a User by ID
+URL: DELETE /users/:id
+
+Description: Deletes a user by their ID.
+
+Headers: Authorization: Bearer <access_token>
+
+Response:
+
+json
+Copy code
+{
+  "message": "User has been deleted successfully"
+}
+
+
+Project Structure:
+src/
+├── auth/
+│   ├── decorators/
+│   │   └── public.decorator.ts          # Decorator for marking public routes
+│   ├── guards/
+│   │   ├── jwt-auth.guard.ts            # JWT guard for protecting routes
+│   │   └── local-auth.guard.ts          # Local guard for handling login
+│   ├── auth.controller.spec.ts          # Unit tests for AuthController
+│   ├── auth.controller.ts               # Authentication controller
+│   ├── auth.module.ts                   # Authentication module
+│   ├── auth.service.spec.ts             # Unit tests for AuthService
+│   ├── auth.service.ts                  # Authentication service
+│   ├── jwt.strategy.ts                  # JWT strategy for authorization
+│   └── local.strategy.ts                # Local strategy for login
+├── users/
+│   ├── dto/
+│   │   └── create-user.dto.ts           # DTO for user creation
+│   ├── user.entity.ts                   # User entity definition
+│   ├── users.controller.spec.ts         # Unit tests for UsersController
+│   ├── users.controller.ts              # User controller for CRUD operations
+│   ├── users.module.ts                  # User module
+│   ├── users.service.spec.ts            # Unit tests for UsersService
+│   └── users.service.ts                 # User service for database operations
+├── app.controller.spec.ts               # Unit tests for AppController
+├── app.controller.ts                    # Main application controller
+├── app.module.ts                        # Root module of the application
+├── app.service.ts                       # Main application service
+└── main.ts                              # Application entry point
 
 
 <p align="center">
