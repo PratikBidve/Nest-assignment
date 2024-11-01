@@ -29,12 +29,13 @@ Setup Instructions
 Installation
 Clone the repository:
 
-bash
-Copy code
 git clone https://github.com/PratikBidve/Nest-assignment.git
+
 cd Nest-assignment
-Install dependencies:
-Inside terminal:
+
+Note: Make sure you installed the latest Nodejs on your computer.
+Install dependencies(Inside terminal):
+
 npm install
 
 We have the enviorment variables inside docker-compose.yaml:
@@ -52,8 +53,8 @@ Run with Docker (Recommended)
 
 Start services using Docker Compose:
 
-docker compose up --build //for the first time 
-docker compose up //after first time 
+docker compose up --build       //for the first time 
+docker compose up               //after first time 
 
 This will start the NestJS API, PostgreSQL, and PgAdmin for database management.
 
