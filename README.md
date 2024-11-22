@@ -1,299 +1,234 @@
-NestJS Authentication and CRUD API:
+
+# NestJS Authentication and CRUD API
+
 This project is a RESTful API built with NestJS, TypeORM, and PostgreSQL. It provides user authentication with JWT, role-based authorization, and secure CRUD operations on a User resource. The API adheres to clean and modular architecture principles, facilitating code reusability and scalability.
 
-Table of Contents:
-1)Project Overview
-2)Tech Stack
-3)Setup Instructions
-4)Installation
-5)Running the Application
-6)Environment Variables
-7)API Documentation
-8)Auth Endpoints
-9)User CRUD Endpoints
-10)Project Structure
+---
 
-Project Overview:
-The API’s main functionalities include:
+## Table of Contents
 
-User Registration and Login: Users can register and log in using JWT-based authentication.
-Role-Based Authorization: Implemented roles (admin, user) to restrict access to specific routes based on user roles.
-User CRUD Operations: Users can perform CRUD operations on the User entity, with routes secured by authentication.
-Modular Architecture: Uses NestJS modules (AuthModule, UsersModule) for separation of concerns, making the API maintainable and scalable.
-Tech Stack:
-NestJS: A progressive Node.js framework for scalable server-side applications.
-TypeORM: An ORM that allows interaction with PostgreSQL for efficient database management.
-PostgreSQL: A robust and widely used relational database system.
-Passport: Middleware for implementing authentication and authorization strategies.
-Setup Instructions
-Installation
-Clone the repository:
+1. [Project Overview](#project-overview)  
+2. [Tech Stack](#tech-stack)  
+3. [Setup Instructions](#setup-instructions)  
+   - [Installation](#installation)  
+   - [Running the Application](#running-the-application)  
+   - [Environment Variables](#environment-variables)  
+4. [API Documentation](#api-documentation)  
+   - [Auth Endpoints](#auth-endpoints)  
+   - [User CRUD Endpoints](#user-crud-endpoints)  
+5. [Project Structure](#project-structure)  
 
-git clone https://github.com/PratikBidve/Nest-assignment.git
+---
 
-cd Nest-assignment
+## Project Overview
 
-Note: Make sure you installed the latest Nodejs on your computer.
-Install dependencies(Inside terminal):
+### Key Features
 
-npm install
+- **User Registration and Login**: Users can register and log in using JWT-based authentication.
+- **Role-Based Authorization**: Implement roles (admin, user) to restrict access to specific routes.
+- **User CRUD Operations**: Secure CRUD operations on the User entity with authentication.
+- **Modular Architecture**: Uses NestJS modules for separation of concerns, ensuring maintainability and scalability.
 
-We have the enviorment variables inside docker-compose.yaml:
-    environment:
-      - DB_TYPE=postgres
-      - PG_HOST=db
-      - PG_USER=postgres
-      - PG_PASSWORD=postgres
-      - PG_DB=postgres
-      - PG_PORT=5432
-      - JWT_SECRET=your_jwt_secret_key 
+---
 
-Running the Application
-Run with Docker (Recommended)
+## Tech Stack
 
-Start services using Docker Compose:
+- **NestJS**: A progressive Node.js framework for scalable server-side applications.
+- **TypeORM**: An ORM for interacting with PostgreSQL for efficient database management.
+- **PostgreSQL**: A powerful, open-source relational database.
+- **Passport**: Middleware for implementing authentication and authorization strategies.
 
-docker compose up --build       //for the first time 
-docker compose up               //after first time 
+---
 
-This will start the NestJS API, PostgreSQL, and PgAdmin for database management.
+## Setup Instructions
 
-Access the API at http://localhost:3000.
+### Installation
 
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/PratikBidve/Nest-assignment.git
+   cd Nest-assignment
+   ```
 
-# Database configuration
-DB_TYPE=postgres
-PG_HOST=db
-PG_PORT=5432
-PG_USER=postgres
-PG_PASSWORD=postgres
-PG_DB=postgres
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-# JWT Secret Key
-JWT_SECRET=your_jwt_secret_key
+3. Ensure you have the latest Node.js installed.
 
+---
 
-API Documentation:
-Auth Endpoints
-Register a New User
-URL: POST /auth/register
+### Running the Application
 
-Description: Registers a new user with a username, password, and optional role.
+#### Using Docker (Recommended)
 
-Body:
+1. Start services using Docker Compose:
+   ```bash
+   docker compose up --build   # For the first time
+   docker compose up           # Subsequent runs
+   ```
 
-json:
-Copy code:
-{
-  "username": "newuser",
-  "password": "newpassword",
-  "role": "user"
-}
-Login:
-URL: POST /auth/login
+2. Access the API at [http://localhost:3000](http://localhost:3000).
 
-Description: Authenticates a user and provides a JWT access token.
+#### Without Docker
 
-Body:
+1. Configure your environment variables (see below).
+2. Start the application:
+   ```bash
+   npm run start
+   ```
 
-json
-Copy code
-{
-  "username": "testuser",
-  "password": "testpassword"
-}
-Response:
+---
 
-json
-Copy code
-{
-  "access_token": "your.jwt.token"
-}
-Get Profile
-URL: GET /auth/profile
-Description: Returns the logged-in user’s profile.
-Headers: Authorization: Bearer <access_token>
-User CRUD Endpoints
-These endpoints allow for creating, reading, updating, and deleting users. All endpoints are protected and require a valid JWT token.
+### Environment Variables
 
-Create a New User
-URL: POST /users
+The environment variables are pre-configured in the `docker-compose.yaml` file:
 
-Description: Creates a new user.
+```yaml
+environment:
+  - DB_TYPE=postgres
+  - PG_HOST=db
+  - PG_USER=postgres
+  - PG_PASSWORD=postgres
+  - PG_DB=postgres
+  - PG_PORT=5432
+  - JWT_SECRET=your_jwt_secret_key
+```
 
-Headers: Authorization: Bearer <access_token>
+---
 
-Body:
+## API Documentation
 
-json
-Copy code
-{
-  "username": "newuser",
-  "password": "newpassword",
-  "role": "user"
-}
-Get All Users
+### Auth Endpoints
 
-URL: GET /users
+1. **Register a New User**  
+   **URL:** `POST /auth/register`  
+   **Body:**
+   ```json
+   {
+     "username": "newuser",
+     "password": "newpassword",
+     "role": "user"
+   }
+   ```
 
-Description: Retrieves a list of all users.
-Headers: Authorization: Bearer <access_token>
+2. **Login**  
+   **URL:** `POST /auth/login`  
+   **Body:**
+   ```json
+   {
+     "username": "testuser",
+     "password": "testpassword"
+   }
+   ```  
+   **Response:**
+   ```json
+   {
+     "access_token": "your.jwt.token"
+   }
+   ```
 
-Get a User by ID
-URL: GET /users/:id
-Description: Retrieves a specific user by their ID.
-Headers: Authorization: Bearer <access_token>
+3. **Get Profile**  
+   **URL:** `GET /auth/profile`  
+   **Headers:** `Authorization: Bearer <access_token>`  
 
-Update a User by ID
-URL: PUT /users/:id
+---
 
-Description: Updates a user’s details.
+### User CRUD Endpoints
 
-Headers: Authorization: Bearer <access_token>
+1. **Create a New User**  
+   **URL:** `POST /users`  
+   **Headers:** `Authorization: Bearer <access_token>`  
+   **Body:**
+   ```json
+   {
+     "username": "newuser",
+     "password": "newpassword",
+     "role": "user"
+   }
+   ```
 
-Body:
+2. **Get All Users**  
+   **URL:** `GET /users`  
+   **Headers:** `Authorization: Bearer <access_token>`  
 
-json:
-Copy code
-{
-  "username": "updateduser",
-  "role": "admin"
-}
+3. **Get a User by ID**  
+   **URL:** `GET /users/:id`  
+   **Headers:** `Authorization: Bearer <access_token>`  
 
+4. **Update a User by ID**  
+   **URL:** `PUT /users/:id`  
+   **Headers:** `Authorization: Bearer <access_token>`  
+   **Body:**
+   ```json
+   {
+     "username": "updateduser",
+     "role": "admin"
+   }
+   ```
 
-Partial Update (PATCH) a User by ID
-URL: PATCH /users/:id
+5. **Partial Update (PATCH) a User by ID**  
+   **URL:** `PATCH /users/:id`  
+   **Headers:** `Authorization: Bearer <access_token>`  
+   **Body:**
+   ```json
+   {
+     "username": "updatedPartialUser"
+   }
+   ```
 
-Description: Updates specific fields of a user’s profile.
+6. **Delete a User by ID**  
+   **URL:** `DELETE /users/:id`  
+   **Headers:** `Authorization: Bearer <access_token>`  
+   **Response:**
+   ```json
+   {
+     "message": "User has been deleted successfully"
+   }
+   ```
 
-Headers: Authorization: Bearer <access_token>
+---
 
-Body:
+## Project Structure
 
-json:
-Copy code
-{
-  "username": "updatedPartialUser"
-}
-
-
-Delete a User by ID
-URL: DELETE /users/:id
-
-Description: Deletes a user by their ID.
-
-Headers: Authorization: Bearer <access_token>
-
-Response:
-
-json
-Copy code
-{
-  "message": "User has been deleted successfully"
-}
-
-
-Project Structure:
+```
 src/
 ├── auth/
 │   ├── decorators/
-│   │   └── public.decorator.ts          # Decorator for marking public routes
+│   │   └── public.decorator.ts
 │   ├── guards/
-│   │   ├── jwt-auth.guard.ts            # JWT guard for protecting routes
-│   │   └── local-auth.guard.ts          # Local guard for handling login
-│   ├── auth.controller.spec.ts          # Unit tests for AuthController
-│   ├── auth.controller.ts               # Authentication controller
-│   ├── auth.module.ts                   # Authentication module
-│   ├── auth.service.spec.ts             # Unit tests for AuthService
-│   ├── auth.service.ts                  # Authentication service
-│   ├── jwt.strategy.ts                  # JWT strategy for authorization
-│   └── local.strategy.ts                # Local strategy for login
+│   │   ├── jwt-auth.guard.ts
+│   │   └── local-auth.guard.ts
+│   ├── auth.controller.spec.ts
+│   ├── auth.controller.ts
+│   ├── auth.module.ts
+│   ├── auth.service.spec.ts
+│   ├── auth.service.ts
+│   ├── jwt.strategy.ts
+│   └── local.strategy.ts
 ├── users/
 │   ├── dto/
-│   │   └── create-user.dto.ts           # DTO for user creation
-│   ├── user.entity.ts                   # User entity definition
-│   ├── users.controller.spec.ts         # Unit tests for UsersController
-│   ├── users.controller.ts              # User controller for CRUD operations
-│   ├── users.module.ts                  # User module
-│   ├── users.service.spec.ts            # Unit tests for UsersService
-│   └── users.service.ts                 # User service for database operations
-├── app.controller.spec.ts               # Unit tests for AppController
-├── app.controller.ts                    # Main application controller
-├── app.module.ts                        # Root module of the application
-├── app.service.ts                       # Main application service
-└── main.ts                              # Application entry point
-
-
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
-
-```bash
-$ npm install
+│   │   └── create-user.dto.ts
+│   ├── user.entity.ts
+│   ├── users.controller.spec.ts
+│   ├── users.controller.ts
+│   ├── users.module.ts
+│   ├── users.service.spec.ts
+│   └── users.service.ts
+├── app.controller.spec.ts
+├── app.controller.ts
+├── app.module.ts
+├── app.service.ts
+└── main.ts
 ```
 
-## Running the app
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Test
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+---
 
 ## License
 
-Nest is [MIT licensed](LICENSE).
+This project is licensed under the [MIT License](LICENSE).  
+
+--- 
+
+Enjoy coding with NestJS! 🚀
