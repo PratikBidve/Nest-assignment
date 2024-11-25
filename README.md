@@ -194,7 +194,7 @@ environment:
 
 ```
 src/
-├── auth/
+├── auth/                              # Authentication and Authorization
 │   ├── decorators/
 │   │   └── public.decorator.ts
 │   ├── guards/
@@ -207,7 +207,7 @@ src/
 │   ├── auth.service.ts
 │   ├── jwt.strategy.ts
 │   └── local.strategy.ts
-├── users/
+├── users/                             # User Management
 │   ├── dto/
 │   │   └── create-user.dto.ts
 │   ├── user.entity.ts
@@ -216,11 +216,27 @@ src/
 │   ├── users.module.ts
 │   ├── users.service.spec.ts
 │   └── users.service.ts
+├── workflows/                         # Workflow Management
+│   ├── dto/
+│   │   ├── create-workflow.dto.ts
+│   │   └── create-node.dto.ts
+│   ├── entities/
+│   │   ├── workflow.entity.ts
+│   │   └── node.entity.ts
+│   ├── services/
+│   │   ├── workflow.service.ts
+│   │   └── node.service.ts
+│   ├── workflows.controller.ts
+│   └── workflows.module.ts
+├── task-queue/                        # Task Queue for Workflow Execution
+│   ├── task-queue.module.ts
+│   └── workflow.processor.ts
 ├── app.controller.spec.ts
 ├── app.controller.ts
 ├── app.module.ts
 ├── app.service.ts
 └── main.ts
+
 ```
 
 ---
