@@ -16,15 +16,15 @@ export class WorkflowProcessor {
     const { workflowId, nodeId } = job.data;
 
     try {
-      this.logger.log(`Executing Node ${nodeId} for Workflow ${workflowId}`);
+      this.logger.log(`Starting execution for Node ${nodeId} in Workflow ${workflowId}`);
 
-      // Logic to execute the node
+      // Delegate execution to WorkflowService
       await this.workflowService.executeNode(workflowId, nodeId);
 
-      this.logger.log(`Node ${nodeId} executed successfully`);
+      this.logger.log(`Successfully executed Node ${nodeId} in Workflow ${workflowId}`);
     } catch (error) {
       this.logger.error(
-        `Node ${nodeId} execution failed: ${error.message}`,
+        `Failed to execute Node ${nodeId} in Workflow ${workflowId}: ${error.message}`,
         error.stack,
       );
 
@@ -32,7 +32,7 @@ export class WorkflowProcessor {
         this.logger.log(
           `Retrying Node ${nodeId} (${job.attemptsMade + 1}/${taskQueueConfig.maxRetries})`,
         );
-        throw error; // Bull will automatically retry
+        throw error; // Trigger retry mechanism in Bull
       } else {
         this.logger.error(`Max retries reached for Node ${nodeId}.`);
       }

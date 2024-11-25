@@ -1,7 +1,8 @@
+---
 
-# NestJS Authentication and CRUD API
+# NestJS Authentication, CRUD API, and Workflow Engine
 
-This project is a RESTful API built with NestJS, TypeORM, and PostgreSQL. It provides user authentication with JWT, role-based authorization, and secure CRUD operations on a User resource. The API adheres to clean and modular architecture principles, facilitating code reusability and scalability.
+This project is a RESTful API built with **NestJS**, **TypeORM**, and **PostgreSQL**. It provides user authentication with **JWT**, role-based authorization, secure CRUD operations on a **User** resource, and a powerful, extensible **workflow engine**.
 
 ---
 
@@ -16,7 +17,15 @@ This project is a RESTful API built with NestJS, TypeORM, and PostgreSQL. It pro
 4. [API Documentation](#api-documentation)  
    - [Auth Endpoints](#auth-endpoints)  
    - [User CRUD Endpoints](#user-crud-endpoints)  
+   - [Workflow Endpoints](#workflow-endpoints)  
+   - [Task Queue Endpoints](#task-queue-endpoints)  
 5. [Project Structure](#project-structure)  
+6. [Workflow Engine](#workflow-engine)  
+   - [Supported Node Types](#supported-node-types)  
+   - [Workflow Schema](#workflow-schema)  
+   - [Execution Flow](#execution-flow)  
+   - [Examples](#examples)  
+7. [License](#license)
 
 ---
 
@@ -24,10 +33,17 @@ This project is a RESTful API built with NestJS, TypeORM, and PostgreSQL. It pro
 
 ### Key Features
 
-- **User Registration and Login**: Users can register and log in using JWT-based authentication.
-- **Role-Based Authorization**: Implement roles (admin, user) to restrict access to specific routes.
-- **User CRUD Operations**: Secure CRUD operations on the User entity with authentication.
-- **Modular Architecture**: Uses NestJS modules for separation of concerns, ensuring maintainability and scalability.
+- **Authentication and Authorization**:
+  - **User Registration and Login** using JWT-based authentication.
+  - **Role-Based Authorization** to restrict access to specific routes.
+- **Secure CRUD Operations** on the User entity with authentication.
+- **Modular Workflow Engine**:
+  - Design and execute custom workflows with various node types.
+  - Extensible and scalable to meet complex workflow requirements.
+- **Task Queue for Workflow Execution**:
+  - Asynchronous and reliable workflow execution using Bull and Redis.
+- **Modular Architecture**:
+  - Uses NestJS modules for separation of concerns, ensuring maintainability and scalability.
 
 ---
 
@@ -37,6 +53,8 @@ This project is a RESTful API built with NestJS, TypeORM, and PostgreSQL. It pro
 - **TypeORM**: An ORM for interacting with PostgreSQL for efficient database management.
 - **PostgreSQL**: A powerful, open-source relational database.
 - **Passport**: Middleware for implementing authentication and authorization strategies.
+- **Bull**: A task queue for workflow execution.
+- **Redis**: A high-performance in-memory database for Bull task queues.
 
 ---
 
@@ -94,6 +112,8 @@ environment:
   - PG_DB=postgres
   - PG_PORT=5432
   - JWT_SECRET=your_jwt_secret_key
+  - REDIS_HOST=redis
+  - REDIS_PORT=6379
 ```
 
 ---
@@ -190,61 +210,109 @@ environment:
 
 ---
 
-## Project Structure
+### Workflow Endpoints
 
-```
-src/
-├── auth/                              # Authentication and Authorization
-│   ├── decorators/
-│   │   └── public.decorator.ts
-│   ├── guards/
-│   │   ├── jwt-auth.guard.ts
-│   │   └── local-auth.guard.ts
-│   ├── auth.controller.spec.ts
-│   ├── auth.controller.ts
-│   ├── auth.module.ts
-│   ├── auth.service.spec.ts
-│   ├── auth.service.ts
-│   ├── jwt.strategy.ts
-│   └── local.strategy.ts
-├── users/                             # User Management
-│   ├── dto/
-│   │   └── create-user.dto.ts
-│   ├── user.entity.ts
-│   ├── users.controller.spec.ts
-│   ├── users.controller.ts
-│   ├── users.module.ts
-│   ├── users.service.spec.ts
-│   └── users.service.ts
-├── workflows/                         # Workflow Management
-│   ├── dto/
-│   │   ├── create-workflow.dto.ts
-│   │   └── create-node.dto.ts
-│   ├── entities/
-│   │   ├── workflow.entity.ts
-│   │   └── node.entity.ts
-│   ├── services/
-│   │   ├── workflow.service.ts
-│   │   └── node.service.ts
-│   ├── workflows.controller.ts
-│   └── workflows.module.ts
-├── task-queue/                        # Task Queue for Workflow Execution
-│   ├── task-queue.module.ts
-│   └── workflow.processor.ts
-├── app.controller.spec.ts
-├── app.controller.ts
-├── app.module.ts
-├── app.service.ts
-└── main.ts
+1. **Create a Workflow**  
+   **URL:** `POST /workflows`  
+   **Body:**
+   ```json
+   {
+     "name": "My First Workflow",
+     "definition": {
+       "nodes": [
+         {
+           "id": "start_1",
+           "type": "start",
+           "name": "Start Node",
+           "nextNode": "process_1"
+         },
+         {
+           "id": "process_1",
+           "type": "process",
+           "name": "Process Node",
+           "task": "processData",
+           "nextNode": "end_1"
+         },
+         {
+           "id": "end_1",
+           "type": "end",
+           "name": "End Node"
+         }
+       ]
+     }
+   }
+   ```
 
-```
+2. **Execute a Workflow**  
+   **URL:** `POST /workflows/execute/:id`  
+   **Headers:** `Authorization: Bearer <access_token>`  
+
+3. **Get Workflow Details**  
+   **URL:** `GET /workflows/:id`  
+   **Headers:** `Authorization: Bearer <access_token>`  
+
+4. **List All Workflows**  
+   **URL:** `GET /workflows`  
+   **Headers:** `Authorization: Bearer <access_token>`  
+
+5. **Delete a Workflow**  
+   **URL:** `DELETE /workflows/:id`  
+   **Headers:** `Authorization: Bearer <access_token>`  
 
 ---
 
-## License
+### Task Queue Endpoints
 
-This project is licensed under the [MIT License](LICENSE).  
+1. **Check Task Queue Status**  
+   **URL:** `GET /tasks/status`  
+   **Headers:** `Authorization: Bearer <access_token>`  
 
---- 
+2. **Retry a Failed Task**  
+   **URL:** `POST /tasks/retry/:id`  
+   **Headers:** `Authorization: Bearer <access_token>`  
 
-Enjoy coding with NestJS! 🚀
+---
+
+## Workflow Engine
+
+### Supported Node Types
+
+- **Start Node**: Initiates the workflow.
+- **End Node**: Marks the end of the workflow.
+- **Condition Node**: Evaluates a condition and branches based on the result.
+- **Process Node**: Executes a predefined task.
+- **Wait Node**: Pauses workflow execution for a specified time.
+
+---
+
+### Workflow Schema
+
+```json
+{
+  "name": "My Workflow",
+  "definition": {
+    "nodes": [
+      {
+        "id": "start_1",
+        "type": "start",
+        "name": "Start Node",
+        "nextNode": "process_1"
+      },
+      {
+        "id": "process_1",
+        "type": "process",
+        "name": "Process Node",
+        "task": "processData",
+        "nextNode": "end_1"
+      },
+      {
+        "id": "end_1",
+        "type": "end",
+        "name": "End Node"
+      }
+    ]
+  }
+}
+```
+
+---
