@@ -19,6 +19,6 @@ export class WorkflowScheduler {
     await new Promise((resolve) => setTimeout(resolve, delay)); // Simulated delay
 
     // Continue the workflow execution
-    await this.workflowService.executeNextNode(workflowId, nodeId);
+    await this.workflowService.executeNode(workflowId, nodeId);
   }
 }

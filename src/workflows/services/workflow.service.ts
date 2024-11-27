@@ -7,6 +7,13 @@ import { CreateWorkflowDto } from '../dto/create-workflow.dto';
 import { EventsGateway } from '../../events/events.gateway';
 import { LoggerService } from '../../utils/logger.service';
 
+interface WorkflowUpdatePayload {
+  workflowId: number;
+  nodeId: number | null;
+  status: string;
+  timestamp: string;
+}
+
 @Injectable()
 export class WorkflowService {
   constructor(
@@ -23,17 +30,17 @@ export class WorkflowService {
    */
   async createWorkflow(createWorkflowDto: CreateWorkflowDto): Promise<Workflow> {
     const { name, definition, nodes } = createWorkflowDto;
-  
+
     // Check if a workflow with the same name already exists
     const existingWorkflow = await this.workflowRepository.findOne({ where: { name } });
     if (existingWorkflow) {
       throw new ConflictException(`A workflow with the name "${name}" already exists.`);
     }
-  
+
     // Create and save a new workflow
     const workflow = this.workflowRepository.create({ name, definition });
     const savedWorkflow = await this.workflowRepository.save(workflow);
-  
+
     // Create and associate nodes if provided
     if (nodes?.length > 0) {
       const nodeEntities = nodes.map((node) =>
@@ -42,10 +49,18 @@ export class WorkflowService {
       await this.nodeRepository.save(nodeEntities);
       savedWorkflow.nodes = nodeEntities;
     }
-  
+
+    // Send WebSocket update for workflow creation
+    this.eventsGateway.sendWorkflowUpdate({
+      workflowId: savedWorkflow.id,
+      nodeId: null,
+      status: 'created',
+      timestamp: new Date().toISOString(),
+    });
+
+    this.logger.log(`Workflow with ID ${savedWorkflow.id} created successfully`, 'WorkflowService');
     return savedWorkflow;
   }
-  
 
   /**
    * Retrieves a workflow by ID.
@@ -90,6 +105,14 @@ export class WorkflowService {
 
     const updatedWorkflow = await this.workflowRepository.save(workflow);
 
+    // Send WebSocket update for workflow update
+    this.eventsGateway.sendWorkflowUpdate({
+      workflowId: updatedWorkflow.id,
+      nodeId: null,
+      status: 'updated',
+      timestamp: new Date().toISOString(),
+    });
+
     this.logger.log(`Workflow with ID ${id} updated successfully`, 'WorkflowService');
     return updatedWorkflow;
   }
@@ -103,6 +126,14 @@ export class WorkflowService {
     const workflow = await this.getWorkflowById(id);
     await this.nodeRepository.delete({ workflow: { id: workflow.id } });
     await this.workflowRepository.delete(id);
+
+    // Send WebSocket update for workflow deletion
+    this.eventsGateway.sendWorkflowUpdate({
+      workflowId: id,
+      nodeId: null,
+      status: 'deleted',
+      timestamp: new Date().toISOString(),
+    });
 
     this.logger.log(`Workflow with ID ${id} deleted successfully`, 'WorkflowService');
   }
@@ -127,25 +158,21 @@ export class WorkflowService {
       throw new NotFoundException(`Node ${nodeId} not found in Workflow ${workflowId}`);
     }
 
-    this.eventsGateway.sendWorkflowUpdate({
+    // Send "in_progress" status update
+    const updatePayload: WorkflowUpdatePayload = {
       workflowId,
       nodeId,
       status: 'in_progress',
       timestamp: new Date().toISOString(),
-    });
+    };
+    this.eventsGateway.sendWorkflowUpdate(updatePayload);
 
-    this.logger.log(
-      `Executing Node ${nodeId} for Workflow ${workflowId}`,
-      'WorkflowService',
-    );
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate execution delay
+    // Simulate execution delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    this.eventsGateway.sendWorkflowUpdate({
-      workflowId,
-      nodeId,
-      status: 'completed',
-      timestamp: new Date().toISOString(),
-    });
+    // Send "completed" status update
+    updatePayload.status = 'completed';
+    this.eventsGateway.sendWorkflowUpdate(updatePayload);
 
     this.logger.log(
       `Node ${nodeId} executed successfully for Workflow ${workflowId}`,
@@ -198,22 +225,20 @@ export class WorkflowService {
         throw new NotFoundException(`Node ${nodeId} not found in Workflow ${workflowId}`);
       }
 
-      this.eventsGateway.sendWorkflowUpdate({
+      const updatePayload: WorkflowUpdatePayload = {
         workflowId,
         nodeId,
         status: 'in_progress',
         timestamp: new Date().toISOString(),
-      });
+      };
+
+      this.eventsGateway.sendWorkflowUpdate(updatePayload);
 
       this.logger.log(`Executing Node ${nodeId} in Workflow ${workflowId}`, 'WorkflowService');
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate delay
 
-      this.eventsGateway.sendWorkflowUpdate({
-        workflowId,
-        nodeId,
-        status: 'completed',
-        timestamp: new Date().toISOString(),
-      });
+      updatePayload.status = 'completed';
+      this.eventsGateway.sendWorkflowUpdate(updatePayload);
 
       this.logger.log(`Node ${nodeId} executed successfully in Workflow ${workflowId}`, 'WorkflowService');
     });

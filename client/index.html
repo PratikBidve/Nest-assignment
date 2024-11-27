@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Test</title>
+    <script
+      src="https://cdn.socket.io/4.3.2/socket.io.min.js"
+      integrity="sha384-KAZ4DtjNhLChOB/hxXuKqhMLYvx3b5MlT55xPEiNmREKRzeEm+RVPlTnAn0ajQNs"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Connect to the WebSocket server
+        const socket = io('http://localhost:3000');
+
+        // Handle connection
+        socket.on('connect', () => {
+          console.log('Connected to WebSocket server');
+
+          // Emit a test event
+          socket.emit('events', { test: 'test' });
+
+          // Emit 'identity' message with callback
+          socket.emit('identity', 0, (response) => {
+            console.log('Identity response:', response);
+          });
+        });
+
+        // Listen for workflow updates
+        socket.on('workflow-update', (data) => {
+          console.log('Workflow update received:', data);
+        });
+
+        // Listen for 'events' response
+        socket.on('events', (data) => {
+          console.log('Events received:', data);
+        });
+
+        // Handle exceptions
+        socket.on('exception', (data) => {
+          console.log('Exception:', data);
+        });
+
+        // Handle disconnection
+        socket.on('disconnect', () => {
+          console.log('Disconnected from WebSocket server');
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <h1>WebSocket Test</h1>
+    <p>Open the console to see WebSocket events in action.</p>
+  </body>
+</html>
