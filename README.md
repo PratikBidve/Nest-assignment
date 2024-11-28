@@ -316,3 +316,7 @@ environment:
 ```
 
 ---
+
+
+
+npm run test -- --config=jest.config.ts
