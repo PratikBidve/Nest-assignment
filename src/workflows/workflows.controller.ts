@@ -35,6 +35,18 @@ export class WorkflowsController {
   constructor(private readonly workflowService: WorkflowService) {}
 
   /**
+   * Retrieve all workflows
+   * @returns An array of all workflows
+   */
+  @Get()
+  @ApiOperation({ summary: 'Retrieve all workflows' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'All workflows retrieved successfully.' })
+  @Roles('user', 'admin') // Both "user" and "admin" roles can retrieve all workflows
+  async getAllWorkflows(): Promise<Workflow[]> {
+    return this.workflowService.getAllWorkflows();
+  }
+
+  /**
    * Create a new workflow
    * @param createWorkflowDto - The details of the workflow to create
    * @returns The created workflow
@@ -93,9 +105,8 @@ export class WorkflowsController {
   @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Workflow deleted successfully.' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @Roles('admin') // Only users with the "admin" role can delete workflows
-  async deleteWorkflow(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }>{
+  async deleteWorkflow(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
     await this.workflowService.deleteWorkflow(id);
-    return {message: `Workflow with Id ${id} has been successfully deleted.`}
-
+    return { message: `Workflow with Id ${id} has been successfully deleted.` };
   }
 }

@@ -28,4 +28,6 @@ export class Node {
   @UpdateDateColumn()
   updatedAt: Date;
   executionStates: any;
+  name: string;
+ 
 }

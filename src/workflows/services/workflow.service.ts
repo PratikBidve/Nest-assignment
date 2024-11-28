@@ -12,6 +12,9 @@ interface WorkflowUpdatePayload {
   nodeId: number | null;
   status: string;
   timestamp: string;
+  workflowName?: string;
+  nodeName?: string;
+  message?: string;
 }
 
 @Injectable()
@@ -24,6 +27,10 @@ export class WorkflowService {
     private readonly eventsGateway: EventsGateway,
     private readonly logger: LoggerService, // Inject LoggerService for structured logs
   ) {}
+
+  private sendWorkflowUpdate(payload: WorkflowUpdatePayload): void {
+    this.eventsGateway.sendWorkflowUpdate(payload);
+  }
 
   /**
    * Creates a new workflow and optionally associates nodes.
@@ -51,11 +58,13 @@ export class WorkflowService {
     }
 
     // Send WebSocket update for workflow creation
-    this.eventsGateway.sendWorkflowUpdate({
+    this.sendWorkflowUpdate({
       workflowId: savedWorkflow.id,
       nodeId: null,
       status: 'created',
       timestamp: new Date().toISOString(),
+      workflowName: savedWorkflow.name,
+      message: `Workflow "${savedWorkflow.name}" has been created successfully.`
     });
 
     this.logger.log(`Workflow with ID ${savedWorkflow.id} created successfully`, 'WorkflowService');
@@ -79,6 +88,16 @@ export class WorkflowService {
 
     this.logger.log(`Workflow with ID ${id} fetched successfully`, 'WorkflowService');
     return workflow;
+  }
+
+  /**
+   * Retrieves all existing workflows.
+   */
+  async getAllWorkflows(): Promise<Workflow[]> {
+    this.logger.log('Fetching all workflows', 'WorkflowService');
+    const workflows = await this.workflowRepository.find({ relations: ['nodes'] });
+    this.logger.log(`Fetched ${workflows.length} workflows`, 'WorkflowService');
+    return workflows;
   }
 
   /**
@@ -106,11 +125,13 @@ export class WorkflowService {
     const updatedWorkflow = await this.workflowRepository.save(workflow);
 
     // Send WebSocket update for workflow update
-    this.eventsGateway.sendWorkflowUpdate({
+    this.sendWorkflowUpdate({
       workflowId: updatedWorkflow.id,
       nodeId: null,
       status: 'updated',
       timestamp: new Date().toISOString(),
+      workflowName: updatedWorkflow.name,
+      message: `Workflow "${updatedWorkflow.name}" has been updated successfully.`
     });
 
     this.logger.log(`Workflow with ID ${id} updated successfully`, 'WorkflowService');
@@ -128,11 +149,13 @@ export class WorkflowService {
     await this.workflowRepository.delete(id);
 
     // Send WebSocket update for workflow deletion
-    this.eventsGateway.sendWorkflowUpdate({
+    this.sendWorkflowUpdate({
       workflowId: id,
       nodeId: null,
       status: 'deleted',
       timestamp: new Date().toISOString(),
+      workflowName: workflow.name,
+      message: `Workflow "${workflow.name}" has been deleted successfully.`
     });
 
     this.logger.log(`Workflow with ID ${id} deleted successfully`, 'WorkflowService');
@@ -158,21 +181,27 @@ export class WorkflowService {
       throw new NotFoundException(`Node ${nodeId} not found in Workflow ${workflowId}`);
     }
 
-    // Send "in_progress" status update
     const updatePayload: WorkflowUpdatePayload = {
       workflowId,
-      nodeId,
+      nodeId, // Include the nodeId here
       status: 'in_progress',
       timestamp: new Date().toISOString(),
+      workflowName: workflow.name,
+      nodeName: node.name,
+      message: `Node "${node.name}" is being executed as part of Workflow "${workflow.name}".`,
     };
-    this.eventsGateway.sendWorkflowUpdate(updatePayload);
 
-    // Simulate execution delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    this.sendWorkflowUpdate(updatePayload);
 
-    // Send "completed" status update
+    this.logger.log(
+      `Executing Node ${nodeId} for Workflow ${workflowId}`,
+      'WorkflowService',
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate execution delay
+
     updatePayload.status = 'completed';
-    this.eventsGateway.sendWorkflowUpdate(updatePayload);
+    updatePayload.message = `Node "${node.name}" has completed execution in Workflow "${workflow.name}".`;
+    this.sendWorkflowUpdate(updatePayload);
 
     this.logger.log(
       `Node ${nodeId} executed successfully for Workflow ${workflowId}`,
@@ -230,15 +259,19 @@ export class WorkflowService {
         nodeId,
         status: 'in_progress',
         timestamp: new Date().toISOString(),
+        workflowName: workflow.name,
+        nodeName: node.name,
+        message: `Node "${node.name}" is being executed as part of Workflow "${workflow.name}".`,
       };
 
-      this.eventsGateway.sendWorkflowUpdate(updatePayload);
+      this.sendWorkflowUpdate(updatePayload);
 
       this.logger.log(`Executing Node ${nodeId} in Workflow ${workflowId}`, 'WorkflowService');
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate delay
 
       updatePayload.status = 'completed';
-      this.eventsGateway.sendWorkflowUpdate(updatePayload);
+      updatePayload.message = `Node "${node.name}" executed successfully in Workflow "${workflow.name}".`;
+      this.sendWorkflowUpdate(updatePayload);
 
       this.logger.log(`Node ${nodeId} executed successfully in Workflow ${workflowId}`, 'WorkflowService');
     });
