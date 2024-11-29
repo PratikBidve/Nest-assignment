@@ -495,5 +495,3 @@ The project uses **Swagger** for API documentation. Swagger provides an interact
 
 - **URL**: `/api`  
   Access the Swagger UI to interact with the APIs and view detailed documentation for each endpoint.
-
-**Note**: Swagger includes detailed examples, request/response formats, and descriptions for each endpoint, making it easier to explore and understand the API.
