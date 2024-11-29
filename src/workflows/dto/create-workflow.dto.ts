@@ -8,6 +8,10 @@ class NodeDto {
   type: 'start' | 'end' | 'condition' | 'wait';
 
   @IsOptional()
+  @IsString({ message: 'Name must be a string.' })
+  name?: string;
+
+  @IsOptional()
   @IsObject({ message: 'Configuration must be a valid object.' })
   configuration?: Record<string, any>;
 

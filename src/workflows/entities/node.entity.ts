@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { Workflow } from './workflow.entity';
 
 @Entity()
@@ -7,27 +8,28 @@ export class Node {
   id: number;
 
   @Column()
-  type: 'start' | 'end' | 'condition' | 'wait'; // Node type
-
-  @Column('jsonb', { nullable: true })
-  configuration: Record<string, any>; // Node-specific settings (e.g., wait time, conditions)
-
-  @ManyToOne(() => Workflow, (workflow) => workflow.nodes, { onDelete: 'CASCADE' })
-  workflow: Workflow; // Link to the parent workflow
+  type: 'start' | 'end' | 'condition' | 'wait';
 
   @Column({ nullable: true })
-  nextNodeId: number; // ID of the next node in sequence, if applicable
+  name: string;
+
+  @Column('jsonb', { nullable: true })
+  configuration: Record<string, any>;
+
+  @ManyToOne(() => Workflow, (workflow) => workflow.nodes, { onDelete: 'CASCADE' })
+  @Exclude() // Prevent workflow from being serialized
+  workflow: Workflow;
+
+  @Column({ nullable: true })
+  nextNodeId: number;
 
   @CreateDateColumn()
   createdAt: Date;
 
-  @DeleteDateColumn()
-  deletedAt: Date;
-
-
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
   executionStates: any;
-  name: string;
- 
 }

@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
@@ -14,12 +14,19 @@ export class AuthService {
 
   async validateUser(username: string, password: string): Promise<any> {
     const user = await this.usersService.findByUsername(username);
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (user && passwordMatch) {
-      const { password, ...result } = user;
-      return result;
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
     }
-    throw new UnauthorizedException('Invalid credentials');
+
+    // Compare the given password with the stored hash
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (passwordMatch) {
+      const { password, ...result } = user; // Remove password before returning
+      return result;
+    } else {
+      console.log('Password does not match during validation');
+      throw new UnauthorizedException('Invalid credentials');
+    }
   }
 
   async login(user: any) {
@@ -30,6 +37,9 @@ export class AuthService {
   }
 
   async register(createUserDto: CreateUserDto): Promise<User> {
-    return this.usersService.create(createUserDto);
+    // Hash the password before saving the user
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const newUserDto = { ...createUserDto, password: hashedPassword };
+    return this.usersService.create(newUserDto);
   }
 }

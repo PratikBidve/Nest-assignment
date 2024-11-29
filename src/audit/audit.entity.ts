@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+} from 'typeorm';
+import { User } from '../users/user.entity'; // Import User entity to define relationship
 
 @Entity()
 export class AuditLog {
@@ -16,4 +23,10 @@ export class AuditLog {
 
   @Column({ type: 'json', nullable: true })
   metadata: any;
+
+  // Define the relationship to User
+  @ManyToOne(() => User, (user) => user.auditLogs, {
+    onDelete: 'CASCADE', // Handle cascading delete
+  })
+  user: User;
 }

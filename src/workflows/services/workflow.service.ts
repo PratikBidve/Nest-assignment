@@ -25,7 +25,7 @@ export class WorkflowService {
     @InjectRepository(Node)
     private readonly nodeRepository: Repository<Node>,
     private readonly eventsGateway: EventsGateway,
-    private readonly logger: LoggerService, // Inject LoggerService for structured logs
+    private readonly logger: LoggerService,
   ) {}
 
   private sendWorkflowUpdate(payload: WorkflowUpdatePayload): void {
@@ -38,33 +38,28 @@ export class WorkflowService {
   async createWorkflow(createWorkflowDto: CreateWorkflowDto): Promise<Workflow> {
     const { name, definition, nodes } = createWorkflowDto;
 
-    // Check if a workflow with the same name already exists
     const existingWorkflow = await this.workflowRepository.findOne({ where: { name } });
     if (existingWorkflow) {
       throw new ConflictException(`A workflow with the name "${name}" already exists.`);
     }
 
-    // Create and save a new workflow
     const workflow = this.workflowRepository.create({ name, definition });
     const savedWorkflow = await this.workflowRepository.save(workflow);
 
-    // Create and associate nodes if provided
     if (nodes?.length > 0) {
-      const nodeEntities = nodes.map((node) =>
-        this.nodeRepository.create({ ...node, workflow: savedWorkflow }),
-      );
+      const nodeEntities = nodes.map((node) => {
+        return this.nodeRepository.create({ ...node, name: node.name, workflow: savedWorkflow });
+      });
       await this.nodeRepository.save(nodeEntities);
-      savedWorkflow.nodes = nodeEntities;
     }
 
-    // Send WebSocket update for workflow creation
     this.sendWorkflowUpdate({
       workflowId: savedWorkflow.id,
       nodeId: null,
       status: 'created',
       timestamp: new Date().toISOString(),
       workflowName: savedWorkflow.name,
-      message: `Workflow "${savedWorkflow.name}" has been created successfully.`
+      message: `Workflow "${savedWorkflow.name}" has been created successfully.`,
     });
 
     this.logger.log(`Workflow with ID ${savedWorkflow.id} created successfully`, 'WorkflowService');
@@ -86,6 +81,13 @@ export class WorkflowService {
       throw new NotFoundException(`Workflow with ID ${id} not found`);
     }
 
+    workflow.nodes = workflow.nodes.map(node => {
+      return {
+        ...node,
+        workflow: undefined,
+      };
+    });
+
     this.logger.log(`Workflow with ID ${id} fetched successfully`, 'WorkflowService');
     return workflow;
   }
@@ -93,12 +95,27 @@ export class WorkflowService {
   /**
    * Retrieves all existing workflows.
    */
-  async getAllWorkflows(): Promise<Workflow[]> {
-    this.logger.log('Fetching all workflows', 'WorkflowService');
-    const workflows = await this.workflowRepository.find({ relations: ['nodes'] });
-    this.logger.log(`Fetched ${workflows.length} workflows`, 'WorkflowService');
+  async getAllWorkflows(page = 1, limit = 10): Promise<Workflow[]> {
+    this.logger.log(`Fetching workflows (Page: ${page}, Limit: ${limit})`, 'WorkflowService');
+    const workflows = await this.workflowRepository.find({
+        skip: (page - 1) * limit,
+        take: limit,
+        relations: ['nodes'],
+    });
+
+    workflows.forEach(workflow => {
+        workflow.nodes = workflow.nodes.map(node => {
+            return {
+                ...node,
+                workflow: undefined,
+            };
+        });
+    });
+
+    this.logger.log(`Workflows fetched successfully (Page: ${page}, Limit: ${limit})`, 'WorkflowService');
     return workflows;
   }
+
 
   /**
    * Updates a workflow and its associated nodes.
@@ -107,19 +124,19 @@ export class WorkflowService {
     this.logger.log(`Updating workflow with ID: ${id}`, 'WorkflowService');
 
     const workflow = await this.getWorkflowById(id);
-
     Object.assign(workflow, updateData);
 
     if (updateData.nodes?.length) {
-      this.logger.log(
-        `Updating ${updateData.nodes.length} nodes for workflow ID: ${id}`,
-        'WorkflowService',
-      );
+      this.logger.log(`Updating nodes for workflow ID: ${id}`, 'WorkflowService');
+
+      // Delete existing nodes
+      await this.nodeRepository.delete({ workflow: { id } });
+
+      // Add updated nodes
       const nodeEntities = updateData.nodes.map((node) =>
         this.nodeRepository.create({ ...node, workflow }),
       );
       await this.nodeRepository.save(nodeEntities);
-      workflow.nodes = nodeEntities;
     }
 
     const updatedWorkflow = await this.workflowRepository.save(workflow);
@@ -141,7 +158,7 @@ export class WorkflowService {
   /**
    * Deletes a workflow and its associated nodes.
    */
-  async deleteWorkflow(id: number): Promise<void> {
+  async deleteWorkflow(id: number): Promise<{ message: string; workflowId: number }> {
     this.logger.log(`Deleting workflow with ID: ${id}`, 'WorkflowService');
 
     const workflow = await this.getWorkflowById(id);
@@ -150,132 +167,69 @@ export class WorkflowService {
 
     // Send WebSocket update for workflow deletion
     this.sendWorkflowUpdate({
-      workflowId: id,
-      nodeId: null,
-      status: 'deleted',
-      timestamp: new Date().toISOString(),
-      workflowName: workflow.name,
-      message: `Workflow "${workflow.name}" has been deleted successfully.`
+        workflowId: id,
+        nodeId: null,
+        status: 'deleted',
+        timestamp: new Date().toISOString(),
+        workflowName: workflow.name,
+        message: `Workflow "${workflow.name}" has been deleted successfully.`
     });
 
     this.logger.log(`Workflow with ID ${id} deleted successfully`, 'WorkflowService');
-  }
+
+    // Return a success message
+    return {
+        message: `Workflow "${workflow.name}" has been deleted successfully.`,
+        workflowId: id
+    };
+}
+
 
   /**
    * Executes a specific node within a workflow.
    */
   async executeNode(workflowId: number, nodeId: number): Promise<void> {
-    this.logger.log(
-      `Starting execution of Node ${nodeId} in Workflow ${workflowId}`,
-      'WorkflowService',
-    );
+    this.logger.log(`Starting execution of Node ${nodeId} in Workflow ${workflowId}`, 'WorkflowService');
 
     const workflow = await this.getWorkflowById(workflowId);
     const node = workflow.nodes.find((n) => n.id === nodeId);
 
     if (!node) {
-      this.logger.error(
-        `Node ${nodeId} not found in Workflow ${workflowId}`,
-        'WorkflowService',
-      );
+      this.logger.error(`Node ${nodeId} not found in Workflow ${workflowId}`, 'WorkflowService');
       throw new NotFoundException(`Node ${nodeId} not found in Workflow ${workflowId}`);
     }
 
-    const updatePayload: WorkflowUpdatePayload = {
+    const nodeName = node.configuration?.action || node.type;
+
+    // Send workflow update for node execution start
+    this.sendWorkflowUpdate({
       workflowId,
-      nodeId, // Include the nodeId here
+      nodeId,
       status: 'in_progress',
       timestamp: new Date().toISOString(),
       workflowName: workflow.name,
-      nodeName: node.name,
-      message: `Node "${node.name}" is being executed as part of Workflow "${workflow.name}".`,
-    };
-
-    this.sendWorkflowUpdate(updatePayload);
-
-    this.logger.log(
-      `Executing Node ${nodeId} for Workflow ${workflowId}`,
-      'WorkflowService',
-    );
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate execution delay
-
-    updatePayload.status = 'completed';
-    updatePayload.message = `Node "${node.name}" has completed execution in Workflow "${workflow.name}".`;
-    this.sendWorkflowUpdate(updatePayload);
-
-    this.logger.log(
-      `Node ${nodeId} executed successfully for Workflow ${workflowId}`,
-      'WorkflowService',
-    );
-  }
-
-  /**
-   * Executes the next node in sequence within a workflow.
-   */
-  async executeNextNode(workflowId: number, nodeId: number): Promise<void> {
-    this.logger.log(
-      `Determining next node for Workflow ${workflowId}, starting from Node ${nodeId}`,
-      'WorkflowService',
-    );
-
-    const workflow = await this.getWorkflowById(workflowId);
-
-    const currentNodeIndex = workflow.nodes.findIndex((node) => node.id === nodeId);
-    if (currentNodeIndex === -1 || currentNodeIndex === workflow.nodes.length - 1) {
-      this.logger.warn(
-        `No next node found for Workflow ${workflowId}, starting from Node ${nodeId}`,
-        'WorkflowService',
-      );
-      return;
-    }
-
-    const nextNode = workflow.nodes[currentNodeIndex + 1];
-    await this.executeNode(workflowId, nextNode.id);
-  }
-
-  /**
-   * Executes multiple nodes concurrently within a workflow.
-   */
-  async executeParallelNodes(workflowId: number, nodeIds: number[]): Promise<void> {
-    this.logger.log(
-      `Starting parallel execution for Nodes ${nodeIds} in Workflow ${workflowId}`,
-      'WorkflowService',
-    );
-
-    const workflow = await this.getWorkflowById(workflowId);
-
-    const nodePromises = nodeIds.map(async (nodeId) => {
-      const node = workflow.nodes.find((n) => n.id === nodeId);
-      if (!node) {
-        this.logger.error(
-          `Node ${nodeId} not found in Workflow ${workflowId}`,
-          'WorkflowService',
-        );
-        throw new NotFoundException(`Node ${nodeId} not found in Workflow ${workflowId}`);
-      }
-
-      const updatePayload: WorkflowUpdatePayload = {
-        workflowId,
-        nodeId,
-        status: 'in_progress',
-        timestamp: new Date().toISOString(),
-        workflowName: workflow.name,
-        nodeName: node.name,
-        message: `Node "${node.name}" is being executed as part of Workflow "${workflow.name}".`,
-      };
-
-      this.sendWorkflowUpdate(updatePayload);
-
-      this.logger.log(`Executing Node ${nodeId} in Workflow ${workflowId}`, 'WorkflowService');
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate delay
-
-      updatePayload.status = 'completed';
-      updatePayload.message = `Node "${node.name}" executed successfully in Workflow "${workflow.name}".`;
-      this.sendWorkflowUpdate(updatePayload);
-
-      this.logger.log(`Node ${nodeId} executed successfully in Workflow ${workflowId}`, 'WorkflowService');
+      nodeName,
+      message: `Node "${nodeName}" is being executed as part of Workflow "${workflow.name}".`,
     });
 
-    await Promise.all(nodePromises);
+    // Simulate execution
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Send workflow update for node execution completion
+    this.sendWorkflowUpdate({
+      workflowId,
+      nodeId,
+      status: 'completed',
+      timestamp: new Date().toISOString(),
+      workflowName: workflow.name,
+      nodeName,
+      message: `Node "${nodeName}" has completed execution in Workflow "${workflow.name}".`,
+    });
+
+    this.logger.log(`Node ${nodeId} executed successfully for Workflow ${workflowId}`, 'WorkflowService');
+
+    if (node.configuration.nextNodeId) {
+      await this.executeNode(workflowId, node.configuration.nextNodeId);
+    }
   }
 }

@@ -10,7 +10,6 @@ async function bootstrap() {
 
   // Create NestJS application
   const app = await NestFactory.create(AppModule);
-
   // Enable CORS for both REST API and WebSocket communication
   app.enableCors({
     origin: ['http://localhost:4200', 'http://localhost:3000'], // Add frontend or WebSocket origin(s)
