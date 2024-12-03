@@ -1,6 +1,6 @@
 # NestJS Authentication, CRUD API, and Workflow Engine
 
-This project is a comprehensive backend RESTful API built with **NestJS**, **TypeORM**, and **PostgreSQL**. It provides authentication, user management, and a robust workflow engine to support complex, custom workflows.
+This project is a comprehensive backend RESTful API built with NestJS, TypeORM, and PostgreSQL. It provides authentication, user management, and a robust workflow engine to support complex, custom workflows.
 
 ---
 
@@ -101,25 +101,25 @@ src/
 
 ## Key Features
 
-- **JWT Authentication**: User authentication using JWT (JSON Web Tokens).
-- **Role-Based Authorization**: Routes are restricted based on user roles.
-- **User Management**: Full CRUD operations on user entities with secure access.
-- **Workflow Engine**:
-  - **Customizable Workflow Nodes**: Design and execute custom workflows.
-  - **Supported Node Types**: Start, End, Condition, Wait nodes for branching logic.
-- **Task Queue for Workflow Execution**: Asynchronous and reliable execution using **Bull** and **Redis**.
-- **Docker Support**: Easily set up the environment using Docker Compose.
+- JWT Authentication: User authentication using JWT (JSON Web Tokens).
+- Role-Based Authorization: Routes are restricted based on user roles.
+- User Management: Full CRUD operations on user entities with secure access.
+- Workflow Engine:
+  - Customizable Workflow Nodes: Design and execute custom workflows.
+  - Supported Node Types: Start, End, Condition, Wait nodes for branching logic.
+- Task Queue for Workflow Execution: Asynchronous and reliable execution using Bull and Redis.
+- Docker Support: Easily set up the environment using Docker Compose.
 
 ---
 
 ## Tech Stack
 
-- **NestJS**: Progressive Node.js framework for building scalable server-side applications.
-- **TypeORM**: Powerful ORM for interacting with **PostgreSQL**.
-- **PostgreSQL**: Open-source relational database for efficient data storage.
-- **Passport**: Authentication middleware for **JWT** and **local strategies**.
-- **Bull**: A queue system backed by **Redis** for managing background tasks.
-- **Redis**: In-memory data structure store used for task queue management.
+- NestJS: Progressive Node.js framework for building scalable server-side applications.
+- TypeORM: Powerful ORM for interacting with PostgreSQL.
+- PostgreSQL: Open-source relational database for efficient data storage.
+- Passport: Authentication middleware for JWT and local strategies.
+- Bull: A queue system backed by Redis for managing background tasks.
+- Redis: In-memory data structure store used for task queue management.
 
 ---
 
@@ -127,27 +127,27 @@ src/
 
 ### Prerequisites
 
-- **Node.js** (v14 or higher)
-- **Docker** and **Docker Compose** (for containerized setup)
-- **PostgreSQL** (if running locally without Docker)
-- **Redis** (if running locally without Docker)
+- Node.js (v14 or higher)
+- Docker and Docker Compose (for containerized setup)
+- PostgreSQL (if running locally without Docker)
+- Redis (if running locally without Docker)
 
 ### Installation
 
-1. **Clone the repository**:
+1. Clone the repository:
 
    ```bash
    git clone https://github.com/PratikBidve/Nest-assignment.git
    cd Nest-assignment
    ```
 
-2. **Install dependencies**:
+2. Install dependencies:
 
    ```bash
    npm install
    ```
 
-3. **Ensure you have the latest version of Node.js** installed to avoid compatibility issues.
+3. Ensure you have the latest version of Node.js installed to avoid compatibility issues.
 
 ### Running the Application
 
@@ -155,20 +155,20 @@ You can run the application either with Docker (recommended) or directly on your
 
 #### Using Docker (Recommended)
 
-1. **Build and start services** using Docker Compose:
+1. Build and start services using Docker Compose:
 
    ```bash
    docker compose up --build  # For the first time
    docker compose up          # Subsequent runs
    ```
 
-2. **Access the API** at [http://localhost:3000](http://localhost:3000).
+2. Access the API at [http://localhost:3000](http://localhost:3000).
 
 #### Running Locally Without Docker
 
-1. **Configure your environment variables** (see below).
-2. **Start PostgreSQL and Redis** services locally.
-3. **Run the application**:
+1. Configure your environment variables (see below).
+2. Start PostgreSQL and Redis services locally.
+3. Run the application:
 
    ```bash
    npm run start
@@ -209,10 +209,10 @@ REDIS_PORT=6379
 
 ### Configuration Notes
 
-- **DB_TYPE**: Should always be `postgres` for PostgreSQL.
-- **PG_HOST**, **PG_USER**, **PG_PASSWORD**, **PG_DB**, **PG_PORT**: Database connection details.
-- **JWT_SECRET**: Secret key for signing JSON Web Tokens.
-- **REDIS_HOST**, **REDIS_PORT**: Redis connection details.
+- DB_TYPE: Should always be `postgres` for PostgreSQL.
+- PG_HOST, PG_USER, PG_PASSWORD, PG_DB, PG_PORT: Database connection details.
+- JWT_SECRET: Secret key for signing JSON Web Tokens.
+- REDIS_HOST, REDIS_PORT: Redis connection details.
 
 ---
 
@@ -220,7 +220,7 @@ REDIS_PORT=6379
 
 ### Starting the Application
 
-1. **Development Mode**:
+1. Development Mode:
 
    ```bash
    npm run start:dev
@@ -228,7 +228,7 @@ REDIS_PORT=6379
 
    This command starts the application in watch mode, automatically restarting on code changes.
 
-2. **Production Mode**:
+2. Production Mode:
 
    ```bash
    npm run start:prod
@@ -238,15 +238,15 @@ REDIS_PORT=6379
 
 ### Testing
 
-1. **Unit Tests**:
+1. Unit Tests:
 
    ```bash
    npm run test
    ```
 
-   Runs all unit tests using **Jest**.
+   Runs all unit tests using Jest.
 
-2. **End-to-End Tests**:
+2. End-to-End Tests:
 
    ```bash
    npm run test:e2e
@@ -254,13 +254,13 @@ REDIS_PORT=6379
 
    Runs e2e tests to verify the system’s behavior from an external perspective.
 
-3. **Linting**:
+3. Linting:
 
    ```bash
    npm run lint
    ```
 
-   Runs the **ESLint** checker for code quality and consistency.
+   Runs the ESLint checker for code quality and consistency.
 
 ---
 
