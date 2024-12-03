@@ -28,7 +28,7 @@ This project implements a complete RESTful API, combining user authentication, s
 
 ## Project Structure
 
-
+```plaintext
 src/
 ├── audit/
 │   ├── audit.entity.ts
@@ -98,7 +98,6 @@ src/
 ├── app.service.ts
 └── main.ts
 
----
 
 ## Key Features
 
