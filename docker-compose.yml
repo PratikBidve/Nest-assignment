@@ -3,55 +3,32 @@ version: '3.9'
 services:
   nestapp:
     container_name: nestapp
-    image: nestapp:1.0.0
-    build: .
+    image: 664418982356.dkr.ecr.ap-south-1.amazonaws.com/nestapp:1.0.0
+    build:
+      context: .
     ports:
-      - 3000:3000
+      - "3000:3000"
     environment:
-      - DB_TYPE=postgres
-      - PG_HOST=db
-      - PG_USER=postgres
-      - PG_PASSWORD=postgres
-      - PG_DB=postgres
-      - PG_PORT=5432
-      - JWT_SECRET=your_jwt_secret_key
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    depends_on:
-      - db
-      - redis
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "3"
+      # Database Configuration
+      DB_TYPE: postgres
+      PG_HOST: database-1.cdisk4m8knsa.ap-south-1.rds.amazonaws.com
+      PG_USER: postgres
+      PG_PASSWORD: postgres
+      PG_DB: postgres
+      PG_PORT: 5432
 
-  db:
-    container_name: db
-    image: postgres:12
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      # Redis Configuration
+      REDIS_HOST: clustercfg.my.x2khqs.aps1.cache.amazonaws.com
+      REDIS_PORT: 6379
 
-  redis:
-    container_name: redis
-    image: redis:6
-    ports:
-      - 6379:6379
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      # JWT Secret
+      JWT_SECRET: your_jwt_secret_key
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
 
   pgadmin:
     container_name: pgadmin
@@ -59,10 +36,15 @@ services:
     ports:
       - "5050:80"
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=admin
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
     depends_on:
-      - db
+      - nestapp
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "256M"
 
 volumes:
   pgdata: {}
