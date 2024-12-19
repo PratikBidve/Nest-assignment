@@ -1,35 +1,36 @@
-# Use a lightweight Node.js image for better efficiency
-FROM node:18-alpine AS builder
+# Use an official Node.js runtime as a parent image
+FROM node:16 AS builder
 
 # Set the working directory inside the container
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Install app dependencies
+# Copy the package.json and package-lock.json (if available)
 COPY package*.json ./
-RUN npm install --only=production
 
-# Copy application source code
+# Install dependencies
+RUN npm install
+
+# Install NestJS CLI globally
+RUN npm install -g @nestjs/cli
+
+# Copy the rest of the application code
 COPY . .
 
-# Build the app
+# Build the NestJS app
 RUN npm run build
 
-# Use another lightweight Node.js image for the final container
-FROM node:18-alpine
+# Use a smaller Node.js image for the final container
+FROM node:16-slim
 
-# Set the working directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy built files and node_modules from the builder stage
-COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/node_modules ./node_modules
+# Copy only the necessary files from the builder image
+COPY --from=builder /app/dist /app/dist
+COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/package*.json /app/
 
-# Expose the application port
+# Expose the port your app will run on
 EXPOSE 3000
 
-# Set the environment variable
-ENV NODE_ENV=production
-ENV JWT_SECRET=your_jwt_secret_key
-
-# Start the application
-CMD ["node", "dist/main"]
+# Run the app
+CMD ["npm", "run", "start:prod"]
